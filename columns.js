@@ -7,21 +7,30 @@ const tasks = [
   { task: 6, connectedTo: [] }
 ];
 
-// Create a map for quick lookup
+// Create a map for quick lookup and initialize column
 const taskMap = new Map();
 tasks.forEach(t => taskMap.set(t.task, { ...t, column: null }));
 
-// Recursive function to assign column
-function assignColumn(taskId, column) {
+// Use a queue for BFS
+const queue = [{ taskId: 1, column: 1 }];
+
+while (queue.length > 0) {
+  const { taskId, column } = queue.shift();
   const task = taskMap.get(taskId);
+
+  // Only update if column is not set or current column is lower
   if (task.column === null || column > task.column) {
     task.column = column;
-    task.connectedTo.forEach(nextId => assignColumn(nextId, column + 1));
+
+    // Enqueue connected tasks with incremented column
+    task.connectedTo.forEach(nextId => {
+      const nextTask = taskMap.get(nextId);
+      if (nextTask && (nextTask.column === null || nextTask.column < column + 1)) {
+        queue.push({ taskId: nextId, column: column + 1 });
+      }
+    });
   }
 }
-
-// Start from the root task (assumed to be task 1)
-assignColumn(1, 1);
 
 // Convert map back to array
 const result = Array.from(taskMap.values());
